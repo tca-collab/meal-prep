@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1a1208">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Meal Prep</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<style>
+  :root{
+    --espresso:#1a1208; --gold:#c8a84b; --cream:#faf7f2; --paper:#fff;
+    --line:#ede5d5; --line2:#e0d8c8; --muted:#a09070; --muted2:#7a6a50;
+    --green:#3a6e4a; --red:#c07060; --rec:#e85c3a;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{font-family:Georgia,'Times New Roman',serif;background:var(--cream);color:var(--espresso);
+    min-height:100vh;padding-bottom:env(safe-area-inset-bottom);}
+  button{font-family:inherit;cursor:pointer;}
+  button:active{opacity:.85;}
+  input,textarea{font-family:inherit;}
+
+  .header{background:var(--espresso);color:var(--cream);
+    padding:calc(16px + env(safe-area-inset-top)) 18px 14px;border-bottom:3px solid var(--gold);
+    position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;}
+  .kicker{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:2px;}
+  .title{font-size:21px;font-weight:bold;letter-spacing:-.5px;}
+  .header .spacer{flex:1;}
+  .back-btn,.new-btn{background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:6px;
+    padding:7px 11px;font-size:14px;}
+  .new-btn{font-size:12px;letter-spacing:1px;text-transform:uppercase;font-weight:bold;}
+
+  /* tabs */
+  .tabs{display:flex;gap:8px;padding:14px 16px 4px;background:var(--cream);}
+  .tab{flex:1;padding:9px 0;border:1px solid var(--line2);background:var(--paper);color:var(--muted2);
+    border-radius:8px;font-size:13px;letter-spacing:1px;text-transform:uppercase;font-weight:bold;}
+  .tab.active{background:var(--espresso);color:var(--gold);border-color:var(--espresso);}
+  .tab .n{opacity:.7;font-weight:normal;}
+
+  .wrap{padding:12px 16px 24px;}
+
+  .card{background:var(--paper);border:1px solid var(--line2);border-radius:10px;padding:16px;margin-bottom:14px;}
+  .card-name{font-size:18px;font-weight:bold;margin-bottom:5px;line-height:1.25;}
+  .card-desc{font-size:13px;color:var(--muted2);line-height:1.5;margin-bottom:10px;}
+  .card-meta{display:flex;gap:14px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;flex-wrap:wrap;}
+  .tagrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+  .tag{display:inline-block;background:var(--cream);border:1px solid var(--line2);border-radius:20px;
+    padding:2px 10px;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);}
+  .tag.custom{background:#f3ead4;border-color:var(--gold);color:#8a6e1e;}
+  .card-btn{width:100%;border:none;background:var(--espresso);color:var(--gold);border-radius:8px;
+    padding:13px;font-size:14px;letter-spacing:1px;text-transform:uppercase;font-weight:bold;}
+  .card-btn.resume{background:var(--green);color:#fff;}
+  .card-btn.done{background:var(--gold);color:var(--espresso);}
+  .card-btn.add{background:var(--green);color:#fff;}
+  .row-mini{display:flex;gap:8px;margin-top:8px;}
+  .mini{flex:1;border:1px solid var(--line2);background:transparent;color:var(--muted2);border-radius:7px;
+    padding:9px;font-size:12px;letter-spacing:1px;text-transform:uppercase;}
+  .mini.danger{color:var(--red);border-color:#e3c4bc;}
+
+  .empty{text-align:center;padding:44px 20px;color:#b0a080;font-size:14px;font-style:italic;line-height:1.6;}
+
+  /* recipe detail */
+  .section-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:18px 0 10px;}
+  .ingredients{background:var(--paper);border:1px solid var(--line2);border-radius:10px;padding:8px 16px;}
+  .ing{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14.5px;}
+  .ing:last-child{border-bottom:none;}
+  .ing .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;}
+  .start-btn{width:100%;border:none;background:var(--green);color:#fff;border-radius:10px;
+    padding:16px;font-size:16px;letter-spacing:1px;text-transform:uppercase;font-weight:bold;margin-top:18px;
+    box-shadow:0 4px 14px rgba(58,110,74,.3);}
+
+  .progress-bar{background:var(--paper);border:1px solid var(--line2);border-radius:10px;padding:14px 16px;margin-top:18px;}
+  .progress-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+  .progress-count{font-size:15px;font-weight:bold;}
+  .progress-pct{font-size:13px;color:var(--gold);font-weight:bold;}
+  .track{height:8px;background:var(--line);border-radius:4px;overflow:hidden;}
+  .fill{height:100%;background:var(--gold);transition:width .35s;}
+
+  .step{background:var(--paper);border:1px solid var(--line2);border-radius:10px;padding:14px;margin-bottom:10px;display:flex;gap:12px;transition:.2s;}
+  .step.active{border-color:var(--gold);box-shadow:0 0 0 2px rgba(200,168,75,.25);}
+  .step.checked{opacity:.55;}
+  .check{width:28px;height:28px;border-radius:8px;border:2px solid var(--line2);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;background:transparent;margin-top:2px;}
+  .step.checked .check{background:var(--green);border-color:var(--green);}
+  .step-body{flex:1;min-width:0;}
+  .step-num{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+  .step-title{font-size:16px;font-weight:bold;margin:2px 0 5px;}
+  .step.checked .step-title{text-decoration:line-through;}
+  .step-text{font-size:14px;line-height:1.55;color:#3a2e1e;}
+  .timer-row{margin-top:10px;display:flex;align-items:center;gap:10px;}
+  .timer-btn{border:1px solid var(--gold);background:transparent;color:#9a7e2e;border-radius:6px;
+    padding:7px 12px;font-size:13px;display:inline-flex;align-items:center;gap:6px;}
+  .timer-btn.running{background:var(--rec);border-color:var(--rec);color:#fff;}
+  .timer-btn.done{background:var(--gold);border-color:var(--gold);color:var(--espresso);}
+  .timer-display{font-size:15px;font-weight:bold;font-variant-numeric:tabular-nums;}
+  .reset-btn{width:100%;background:transparent;border:none;color:#c0b0a0;font-size:13px;letter-spacing:1px;text-decoration:underline;padding:14px;margin-top:6px;}
+
+  /* form */
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+  .field input,.field textarea{width:100%;padding:11px 12px;border:1.5px solid #d0c8b0;border-radius:7px;
+    font-size:15px;background:var(--paper);outline:none;color:var(--espresso);}
+  .field input:focus,.field textarea:focus{border-color:var(--gold);}
+  .two{display:flex;gap:10px;}
+  .two .field{flex:1;}
+  .step-edit{background:var(--paper);border:1px solid var(--line2);border-radius:10px;padding:12px;margin-bottom:10px;}
+  .step-edit-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .step-edit-head span{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+  .step-edit-head button{background:transparent;border:none;color:var(--red);font-size:16px;}
+  .step-edit textarea{width:100%;padding:10px;border:1.5px solid #d0c8b0;border-radius:6px;font-size:14px;background:var(--cream);outline:none;resize:vertical;margin-bottom:8px;}
+  .min-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted2);}
+  .min-row input{width:70px;padding:8px;border:1.5px solid #d0c8b0;border-radius:6px;font-size:14px;background:var(--cream);outline:none;}
+  .add-step{width:100%;border:1px dashed var(--gold);background:transparent;color:#9a7e2e;border-radius:8px;padding:11px;font-size:13px;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;}
+  .save-btn{width:100%;border:none;background:var(--green);color:#fff;border-radius:10px;padding:15px;font-size:15px;letter-spacing:1px;text-transform:uppercase;font-weight:bold;}
+  .cancel-link{width:100%;background:transparent;border:none;color:#c0b0a0;font-size:13px;letter-spacing:1px;text-decoration:underline;padding:14px;}
+
+  .overlay{position:fixed;inset:0;background:rgba(26,18,8,.92);z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;}
+  .overlay.show{display:flex;}
+  .trophy{font-size:64px;margin-bottom:14px;animation:pop .5s ease;}
+  .overlay h2{color:var(--gold);font-size:24px;margin:0 0 8px;}
+  .overlay p{color:var(--cream);font-size:15px;margin:0 0 24px;max-width:280px;line-height:1.5;}
+  .overlay-btn{border:none;background:var(--gold);color:var(--espresso);border-radius:10px;padding:14px 28px;font-size:15px;letter-spacing:1px;text-transform:uppercase;font-weight:bold;}
+  #confetti{position:fixed;inset:0;pointer-events:none;z-index:99;}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--espresso);color:var(--gold);padding:10px 20px;border-radius:24px;font-size:13px;opacity:0;transition:.25s;z-index:60;border:1px solid var(--gold);pointer-events:none;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @keyframes pop{0%{transform:scale(0);}70%{transform:scale(1.2);}100%{transform:scale(1);}}
+</style>
+</head>
+<body>
+  <div class="header" id="header"></div>
+  <div id="tabsHost"></div>
+  <div class="wrap" id="app"></div>
+
+  <canvas id="confetti"></canvas>
+  <div class="overlay" id="overlay">
+    <div class="trophy">🏆</div>
+    <h2 id="overlayTitle">Done!</h2>
+    <p id="overlayMsg"></p>
+    <button class="overlay-btn" id="overlayBtn">Back to Recipes</button>
+  </div>
+  <div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- built-in recipes ----------
+  var BUILTINS = [
+    { id:"oxtail", defaultActive:true, name:"InstaPot Jamaican-Style Oxtail",
+      desc:"Rich, fall-off-the-bone oxtail in the pressure cooker. Serve over jasmine rice.",
+      servings:"Serves 4", time:"~1 hr 30 min", tools:["InstaPot"],
+      ingredients:["2.5 lb oxtail","2 tbsp avocado oil","1 red onion, chopped","2 shallots, chopped","1 tbsp minced garlic","1 tbsp minced ginger","2 carrots, chunked","1 bell pepper, chopped","2 tbsp tomato paste","2 beef bouillon cubes","2 cups water","2 tbsp soy sauce","1 tbsp Worcestershire sauce","1 tsp pimento seeds (allspice)","1 tsp dried thyme","2 dried bay leaves","1 tsp ground black pepper","1 can red kidney beans, drained","2 green onions, sliced"],
+      steps:[
+        {title:"Brown the oxtail",timer:600,text:"Set InstaPot to Sauté. Heat the avocado oil, season the oxtail with salt and pepper, and brown on all sides in batches. Remove and set aside."},
+        {title:"Sauté aromatics",timer:300,text:"Add onion, shallots, garlic, ginger, carrots, and bell pepper. Cook until soft, then stir in the tomato paste and let it darken for a minute."},
+        {title:"Deglaze and season",timer:0,text:"Pour in 2 cups water with the beef bouillon dissolved in it, scraping the bottom. Add soy sauce, Worcestershire, allspice, thyme, bay leaves, and black pepper. Return the oxtail to the pot."},
+        {title:"Pressure cook",timer:2700,text:"Lock the lid and set to high pressure for 45 minutes."},
+        {title:"Natural release",timer:900,text:"Let pressure release naturally for 15 minutes, then quick-release the rest."},
+        {title:"Finish and thicken",timer:600,text:"Stir in the kidney beans. Switch to Sauté and simmer until the sauce thickens. Garnish with green onions and serve over jasmine rice."}
+      ]},
+    { id:"chicken", defaultActive:true, name:"Smoked Cajun Chicken Thighs",
+      desc:"Smoky, spicy thighs off the smoker or grill. Batch a tray for the week.",
+      servings:"Serves 4", time:"~1 hr 15 min", tools:["Smoker / Grill"],
+      ingredients:["2 lb boneless skinless chicken thighs","1 tbsp avocado oil","1.5 tbsp Cajun seasoning","1 tsp paprika","1 tsp garlic powder","1 tsp onion powder","1/4 tsp cayenne pepper","1/2 tsp ground black pepper"],
+      steps:[
+        {title:"Season the thighs",timer:0,text:"Pat the thighs dry. Rub with avocado oil, then coat evenly with Cajun seasoning, paprika, garlic powder, onion powder, cayenne, and black pepper."},
+        {title:"Rest the rub",timer:1200,text:"Let the rubbed thighs rest while the smoker comes up to temp — this helps the rub set."},
+        {title:"Smoke to temp",timer:3000,text:"Smoke at 250°F until internal temp hits 175°F, about 45–60 min. No smoker? Grill over medium, about 6 min per side."},
+        {title:"Rest and slice",timer:300,text:"Rest 5 minutes, then slice. Portion over rice and beans, or onto your greens."}
+      ]},
+    { id:"curry", defaultActive:true, name:"InstaPot Chicken & Lentil Curry",
+      desc:"Hearty one-pot curry, creamy and freezer-friendly. Over jasmine rice.",
+      servings:"Serves 4", time:"~45 min", tools:["InstaPot"],
+      ingredients:["6 chicken drumsticks","1 tbsp coconut oil paste","1 red onion, diced","1 tbsp minced garlic","1 tbsp minced ginger","2 tbsp curry powder","1 tsp ground cumin","1/2 tsp ground turmeric","1 can crushed tomatoes","1 cup lentils, rinsed","1 chicken bouillon cube","2 cups water","1/2 cup evaporated milk","2 cups spinach leaves","1 tsp salt"],
+      steps:[
+        {title:"Bloom the spices",timer:300,text:"Set InstaPot to Sauté. Melt the coconut oil, cook onion, garlic, and ginger until soft. Add curry powder, cumin, and turmeric and stir 30 seconds until fragrant."},
+        {title:"Build the pot",timer:0,text:"Add the drumsticks, crushed tomatoes, lentils, salt, and 2 cups water with the bouillon dissolved in it. Stir to combine."},
+        {title:"Pressure cook",timer:780,text:"Lock the lid and cook on high pressure for 13 minutes."},
+        {title:"Natural release",timer:600,text:"Let pressure release naturally for 10 minutes, then quick-release the rest."},
+        {title:"Finish creamy",timer:180,text:"Stir in the evaporated milk and spinach until the spinach wilts. Serve over jasmine rice."}
+      ]},
+    { id:"tuna", defaultActive:true, name:"Tuna & Navy Bean Salad",
+      desc:"No-cook, protein-packed lunch you can portion for the week. Ready in 10 min.",
+      servings:"Serves 3", time:"~10 min", tools:["No cook"],
+      ingredients:["2 cans tuna, drained","1 can navy beans, rinsed","1/4 red onion, minced","1/2 English cucumber, diced","1/4 cup fresh parsley, chopped","1/3 cup feta cheese, crumbled","2 tbsp lemon juice","2 tbsp extra virgin olive oil","1/2 tsp ground black pepper","1/2 tsp oregano"],
+      steps:[
+        {title:"Combine",timer:0,text:"In a bowl, combine the tuna, navy beans, red onion, cucumber, parsley, and feta."},
+        {title:"Dress and toss",timer:0,text:"Add the lemon juice, olive oil, black pepper, and oregano. Toss gently until everything is coated."},
+        {title:"Chill",timer:1800,text:"Chill before eating for the best flavor, or dig in right away. Portion into containers for the week."}
+      ]},
+    // ---- 4 NEW (active) ----
+    { id:"cajunpasta", defaultActive:true, name:"Creamy Cajun Chicken Pasta",
+      desc:"Fettuccine in a spicy cream sauce with chicken and peppers. Comfort in a bowl.",
+      servings:"Serves 4", time:"~35 min", tools:["Stovetop"],
+      ingredients:["1 lb boneless skinless chicken thighs, sliced","12 oz fettuccine","2 tbsp butter","1 tbsp avocado oil","1 bell pepper, sliced","1 tbsp minced garlic","1.5 tbsp Cajun seasoning","1 cup heavy whipping cream","1/2 cup feta cheese, crumbled","2 cups spinach leaves","2 green onions, sliced","salt to taste"],
+      steps:[
+        {title:"Boil the pasta",timer:600,text:"Cook fettuccine in salted water until al dente. Drain and set aside, saving a splash of pasta water."},
+        {title:"Sear the chicken",timer:480,text:"Season chicken with half the Cajun seasoning. Heat oil and butter, sear chicken until cooked through, then remove."},
+        {title:"Sauté peppers & garlic",timer:300,text:"Add the bell pepper and garlic to the pan and cook until soft."},
+        {title:"Build the sauce",timer:300,text:"Pour in the heavy cream and remaining Cajun seasoning. Simmer until slightly thickened, then stir in the feta until melted."},
+        {title:"Combine",timer:180,text:"Return the chicken, add spinach and pasta, and toss until the spinach wilts and everything is coated (loosen with pasta water if needed). Top with green onions."}
+      ]},
+    { id:"redbeans", defaultActive:true, name:"InstaPot Red Beans & Rice",
+      desc:"Creole-style red beans simmered with the trinity, spooned over jasmine rice.",
+      servings:"Serves 4", time:"~40 min", tools:["InstaPot"],
+      ingredients:["2 cans red kidney beans, drained","1 cup jasmine rice (to serve)","1 tbsp avocado oil","1 red onion, diced","1 bell pepper, diced","2 carrots, diced","1 tbsp minced garlic","1.5 tsp Cajun seasoning","1/2 tsp dried thyme","2 dried bay leaves","1 chicken bouillon cube","1.5 cups water","Frank's red hot sauce, to taste","2 green onions, sliced"],
+      steps:[
+        {title:"Cook the rice",timer:900,text:"Cook the jasmine rice separately per package directions, or on your rice setting. Set aside."},
+        {title:"Sauté the trinity",timer:360,text:"Set InstaPot to Sauté. Heat oil and cook onion, bell pepper, carrots, and garlic until soft."},
+        {title:"Add beans & seasoning",timer:0,text:"Add the red beans, Cajun seasoning, thyme, bay leaves, and 1.5 cups water with the bouillon dissolved in."},
+        {title:"Pressure cook",timer:600,text:"Lock the lid and cook on high pressure for 10 minutes, then quick-release."},
+        {title:"Mash & finish",timer:300,text:"Mash some of the beans against the side of the pot for creaminess. Simmer on Sauté to thicken, then add hot sauce to taste."},
+        {title:"Serve",timer:0,text:"Spoon over the jasmine rice and top with green onions."}
+      ]},
+    { id:"ribeye", defaultActive:true, name:"Grilled Ribeye with Chimichurri",
+      desc:"A weekend reward — seared ribeye with a bright herb sauce. Best eaten fresh.",
+      servings:"Serves 2", time:"~30 min", tools:["Grill"],
+      ingredients:["1 ribeye steak","1 tbsp avocado oil","salt and pepper","— chimichurri —","1 cup fresh parsley, finely chopped","1 tbsp minced garlic","1/4 cup extra virgin olive oil","2 tbsp apple cider vinegar","1/2 tsp oregano","1/4 tsp crushed red pepper flakes","1/2 tsp salt"],
+      steps:[
+        {title:"Temper & season",timer:1800,text:"Take the ribeye out of the fridge, pat it dry, rub with oil, and season generously with salt and pepper. Let it sit 30 min to come to room temp."},
+        {title:"Make chimichurri",timer:0,text:"Mix the parsley, garlic, olive oil, vinegar, oregano, red pepper flakes, and salt. Set aside to let the flavors meld."},
+        {title:"Grill",timer:480,text:"Grill over high heat about 4 min per side for medium-rare (130°F), adjusting to your liking."},
+        {title:"Rest",timer:300,text:"Rest the steak 5 minutes, then slice against the grain."},
+        {title:"Serve",timer:0,text:"Spoon the chimichurri over the top."}
+      ]},
+    { id:"tilapia", defaultActive:true, name:"Garlic-Butter Tilapia",
+      desc:"A 15-minute skillet fish with lemon and herbs. Light and quick.",
+      servings:"Serves 2", time:"~15 min", tools:["Stovetop"],
+      ingredients:["2 tilapia fillets","2 tbsp butter","1 tbsp avocado oil","1 tbsp minced garlic","1 tbsp lemon juice","1/2 tsp Old Bay seasoning","1/4 tsp paprika","salt and pepper","1 tbsp fresh parsley, chopped"],
+      steps:[
+        {title:"Season",timer:0,text:"Pat the tilapia dry. Season both sides with Old Bay, paprika, salt, and pepper."},
+        {title:"Sear",timer:360,text:"Heat oil in a skillet over medium-high. Cook the tilapia about 3 min per side until it flakes, then remove to a plate."},
+        {title:"Garlic butter",timer:120,text:"Lower the heat, melt the butter, add the garlic and lemon juice, and cook 1 min until fragrant."},
+        {title:"Finish",timer:0,text:"Spoon the garlic butter over the fish and top with parsley. Great with rice or salad."}
+      ]},
+    // ---- LIBRARY (not active by default) ----
+    { id:"wings", defaultActive:false, name:"Smoked Chicken Wings",
+      desc:"Crispy-edged smoked wings with a dry rub. Party food, prep-amount.",
+      servings:"Serves 4", time:"~1 hr 30 min", tools:["Smoker / Grill"],
+      ingredients:["2 lb chicken wings","1 tbsp avocado oil","1 tbsp Old Bay seasoning","1 tsp garlic powder","1 tsp paprika","1/2 tsp cayenne pepper","1/2 tsp ground black pepper"],
+      steps:[
+        {title:"Season",timer:0,text:"Pat the wings very dry. Toss with oil, then coat with Old Bay, garlic powder, paprika, cayenne, and black pepper."},
+        {title:"Smoke",timer:3600,text:"Smoke at 250°F for about 1 hour until cooked through."},
+        {title:"Crisp",timer:900,text:"Bump heat to 400°F (or finish on the grill) for 10–15 min to crisp the skin, to 175°F internal."},
+        {title:"Rest",timer:300,text:"Rest 5 minutes and serve. Cocktail sauce or hot sauce on the side."}
+      ]},
+    { id:"tunapom", defaultActive:false, name:"Tuna Spaghetti Pomodoro",
+      desc:"Pantry pasta — canned tuna in a quick garlicky tomato sauce.",
+      servings:"Serves 3", time:"~25 min", tools:["Stovetop"],
+      ingredients:["8 oz thin spaghetti","2 cans tuna, drained","1 can crushed tomatoes","2 tbsp extra virgin olive oil","1 tbsp minced garlic","1/2 tsp crushed red pepper flakes","1/2 tsp dried basil leaves","1/4 cup fresh parsley, chopped","salt to taste"],
+      steps:[
+        {title:"Boil pasta",timer:540,text:"Cook the spaghetti in salted water until al dente. Drain, saving a splash of pasta water."},
+        {title:"Start the sauce",timer:120,text:"Heat the olive oil, add garlic and red pepper flakes, and cook 1 min until fragrant."},
+        {title:"Simmer",timer:600,text:"Add the crushed tomatoes and basil. Simmer 8–10 min and season with salt."},
+        {title:"Add tuna",timer:120,text:"Flake in the tuna and warm through."},
+        {title:"Toss",timer:0,text:"Toss with the pasta (loosen with pasta water) and finish with parsley."}
+      ]},
+    { id:"lentilsoup", defaultActive:false, name:"InstaPot Lentil Soup",
+      desc:"Cozy, cheap, meatless lentil soup. Freezes beautifully.",
+      servings:"Serves 4", time:"~35 min", tools:["InstaPot"],
+      ingredients:["1.5 cups lentils, rinsed","1 tbsp olive oil","1 red onion, diced","2 carrots, diced","1 tbsp minced garlic","1 tsp ground cumin","1/2 tsp ground turmeric","1 can crushed tomatoes","2 bouillon cubes","5 cups water","2 cups spinach leaves","1 tbsp lemon juice","salt and pepper"],
+      steps:[
+        {title:"Sauté",timer:300,text:"Set InstaPot to Sauté. Heat oil, cook onion, carrots, and garlic until soft. Add cumin and turmeric and stir 30 seconds."},
+        {title:"Add everything",timer:0,text:"Add the lentils, crushed tomatoes, and 5 cups water with the bouillon dissolved in. Season with salt and pepper."},
+        {title:"Pressure cook",timer:900,text:"Lock the lid and cook on high pressure for 15 minutes, then quick-release."},
+        {title:"Finish",timer:180,text:"Stir in the spinach and lemon juice until the spinach wilts. Adjust salt."}
+      ]},
+    { id:"shakshuka", defaultActive:false, name:"Shakshuka-Style Baked Eggs",
+      desc:"Eggs poached in a spiced tomato sauce. Breakfast-for-dinner energy.",
+      servings:"Serves 3", time:"~30 min", tools:["Stovetop"],
+      ingredients:["5 eggs","1 can crushed tomatoes","1 tbsp olive oil","1 red onion, diced","1 bell pepper, diced","1 tbsp minced garlic","1 tsp ground cumin","1 tsp paprika","1/4 tsp cayenne pepper","1/3 cup feta cheese, crumbled","1/4 cup fresh parsley, chopped","salt to taste"],
+      steps:[
+        {title:"Sauté",timer:360,text:"Heat oil in a skillet, cook onion and bell pepper until soft. Add garlic, cumin, paprika, and cayenne and stir 1 min."},
+        {title:"Simmer sauce",timer:600,text:"Add the crushed tomatoes and a pinch of salt. Simmer 8–10 min until thickened."},
+        {title:"Add eggs",timer:0,text:"Make wells in the sauce and crack an egg into each. Crumble feta around them."},
+        {title:"Cook eggs",timer:480,text:"Cover and cook on low until the whites set but yolks are still runny, 6–8 min."},
+        {title:"Finish",timer:0,text:"Top with parsley and serve straight from the pan."}
+      ]},
+    { id:"maplesoy", defaultActive:false, name:"Maple-Soy Glazed Drumsticks",
+      desc:"Sweet-savory sticky drumsticks. Oven or grill.",
+      servings:"Serves 4", time:"~45 min", tools:["Oven / Grill"],
+      ingredients:["8 chicken drumsticks","3 tbsp maple syrup","3 tbsp soy sauce","1 tbsp roasted sesame oil","1 tbsp minced garlic","1 tbsp minced ginger","1/2 tsp crushed red pepper flakes","1 tbsp sesame seeds","2 green onions, sliced"],
+      steps:[
+        {title:"Make the glaze",timer:0,text:"Whisk the maple syrup, soy sauce, sesame oil, garlic, ginger, and red pepper flakes."},
+        {title:"Coat",timer:900,text:"Toss the drumsticks in the glaze and let marinate 15 min (or longer in the fridge)."},
+        {title:"Roast or grill",timer:1800,text:"Roast at 425°F for ~30 min (or grill over medium), turning and brushing with glaze, until 175°F internal and sticky."},
+        {title:"Finish",timer:0,text:"Sprinkle with sesame seeds and green onions."}
+      ]},
+    { id:"grits", defaultActive:false, name:"Cheesy Grits & Eggs Bowl",
+      desc:"Creamy Southern grits topped with eggs and cheese. Comfort breakfast.",
+      servings:"Serves 2", time:"~20 min", tools:["Stovetop"],
+      ingredients:["1 cup grits","4 cups water","1 chicken bouillon cube","2 tbsp butter","1/2 cup american cheese","4 eggs","2 green onions, sliced","Frank's red hot sauce, to taste","salt and pepper"],
+      steps:[
+        {title:"Cook grits",timer:600,text:"Bring 4 cups water to a boil with the bouillon. Whisk in the grits, reduce heat, and simmer, stirring, until thick (5–7 min)."},
+        {title:"Make creamy",timer:0,text:"Stir in the butter and cheese until melted. Season with salt and pepper."},
+        {title:"Fry eggs",timer:240,text:"In a skillet, fry the eggs to your liking."},
+        {title:"Build",timer:0,text:"Spoon grits into bowls, top with eggs and green onions. Hot sauce to taste."}
+      ]}
+  ];
+
+  var PROG_KEY = "meal-prep-progress-v1";
+  var BOOK_KEY = "meal-prep-cookbook-v1";
+  var PANTRY_KEY = "meal-prep-pantry-v1";
+  var INV_KEY = "kitchen-inventory-v1"; // shared with your Inventory app (same site = shared storage)
+  var SHOP_KEY = "meal-prep-shopping-v1";
+
+  var view = "home";       // "home" | "new" | "pantry" | recipe id
+  var homeTab = "cookbook"; // "cookbook" | "library" | "cooknow"
+  var progress = {};
+  var book = { overrides:{}, custom:[] }; // overrides: {id:bool}; custom: [recipe]
+  var draft = null;
+  var pantryItems = [];     // what the user has on hand
+  var pantryText = "";      // working text for the editor
+  var shoppingList = [];    // [{name, checked}]
+  var activeTimer = null;
+  var audioCtx = null;
+
+  // ---------- storage ----------
+  function load(){
+    try{ var p=localStorage.getItem(PROG_KEY); if(p) progress=JSON.parse(p)||{}; }catch(e){ progress={}; }
+    try{ var b=localStorage.getItem(BOOK_KEY); if(b){ var parsed=JSON.parse(b); book.overrides=parsed.overrides||{}; book.custom=parsed.custom||[]; } }catch(e){}
+    try{ var pa=localStorage.getItem(PANTRY_KEY); if(pa) pantryItems=JSON.parse(pa)||[]; }catch(e){ pantryItems=[]; }
+    try{ var sh=localStorage.getItem(SHOP_KEY); if(sh) shoppingList=JSON.parse(sh)||[]; }catch(e){ shoppingList=[]; }
+  }
+  function persistProg(){ try{ localStorage.setItem(PROG_KEY, JSON.stringify(progress)); }catch(e){} }
+  function persistBook(){ try{ localStorage.setItem(BOOK_KEY, JSON.stringify(book)); }catch(e){} }
+
+  // ---------- recipe helpers ----------
+  function allRecipes(){ return BUILTINS.concat(book.custom); }
+  function recipeById(id){ var a=allRecipes(); for(var i=0;i<a.length;i++){ if(a[i].id===id) return a[i]; } return null; }
+  function isCustom(r){ return r.id.indexOf("custom-")===0; }
+  function isActive(r){
+    if(isCustom(r)) return true;
+    if(book.overrides.hasOwnProperty(r.id)) return book.overrides[r.id];
+    return r.defaultActive;
+  }
+  function activeRecipes(){ return allRecipes().filter(isActive); }
+  function libraryRecipes(){ return BUILTINS.filter(function(r){ return !isActive(r); }); }
+
+  function getProg(id){
+    var rec=recipeById(id);
+    if(!rec) return {started:false,checked:[]};
+    if(!progress[id]) progress[id]={started:false,checked:new Array(rec.steps.length).fill(false)};
+    if(!progress[id].checked || progress[id].checked.length!==rec.steps.length) progress[id].checked=new Array(rec.steps.length).fill(false);
+    return progress[id];
+  }
+  function checkedCount(id){ return getProg(id).checked.filter(Boolean).length; }
+  function isComplete(id){ var r=recipeById(id); return r && r.steps.length>0 && checkedCount(id)===r.steps.length; }
+
+  function fmt(s){ var m=Math.floor(s/60), ss=s%60; return m+":"+(ss<10?"0":"")+ss; }
+
+  // ---------- audio / haptics ----------
+  function initAudio(){
+    if(!audioCtx){ try{ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+    if(audioCtx && audioCtx.state==="suspended"){ audioCtx.resume(); }
+  }
+  function beep(f,d,w){ if(!audioCtx) return; var o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.frequency.value=f;o.type="sine";o.connect(g);g.connect(audioCtx.destination); var t=audioCtx.currentTime+(w||0); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.3,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+d); o.start(t); o.stop(t+d+0.02); }
+  function timerDone(){ beep(880,0.18,0); beep(880,0.18,0.22); beep(1320,0.3,0.46); }
+  function fanfare(){ beep(523,0.15,0); beep(659,0.15,0.16); beep(784,0.15,0.32); beep(1046,0.4,0.48); }
+  function vibrate(p){ if(navigator.vibrate) navigator.vibrate(p); }
+
+  // ---------- timer ----------
+  function startTimer(stepIdx,seconds){
+    initAudio();
+    if(activeTimer && activeTimer.intervalId) clearInterval(activeTimer.intervalId);
+    activeTimer={stepIdx:stepIdx,remaining:seconds,intervalId:null,done:false};
+    activeTimer.intervalId=setInterval(function(){
+      activeTimer.remaining--;
+      if(activeTimer.remaining<=0){ clearInterval(activeTimer.intervalId); activeTimer.remaining=0; activeTimer.done=true; timerDone(); vibrate([200,100,200,100,400]); }
+      updateTimerUI();
+    },1000);
+    updateTimerUI();
+  }
+  function stopTimerSilent(){ if(activeTimer && activeTimer.intervalId) clearInterval(activeTimer.intervalId); activeTimer=null; }
+  function stopTimer(){ stopTimerSilent(); if(view!=="home"&&view!=="new") render(); }
+  function updateTimerUI(){
+    if(!activeTimer) return;
+    var disp=document.getElementById("timer-disp-"+activeTimer.stepIdx);
+    var btn=document.getElementById("timer-btn-"+activeTimer.stepIdx);
+    if(disp) disp.textContent=fmt(activeTimer.remaining);
+    if(btn){ if(activeTimer.done){ btn.className="timer-btn done"; btn.innerHTML="⏰ Time's up!"; } else { btn.className="timer-btn running"; btn.innerHTML="⏹ Stop"; } }
+  }
+
+  // ---------- toast ----------
+  var toastTimer=null;
+  function toast(msg){ var t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(function(){ t.classList.remove("show"); },2000); }
+
+  // ---------- pantry + ingredient matching ----------
+  function persistPantry(){ try{ localStorage.setItem(PANTRY_KEY, JSON.stringify(pantryItems)); }catch(e){} }
+
+  // Pull inventory straight from the Inventory app (same site shares storage)
+  function syncFromInventory(){
+    var raw=null;
+    try{ raw=localStorage.getItem(INV_KEY); }catch(e){}
+    if(!raw) return null;
+    try{
+      var obj=JSON.parse(raw), items=[];
+      Object.keys(obj).forEach(function(k){ if(Array.isArray(obj[k])) items=items.concat(obj[k]); });
+      return items;
+    }catch(e){ return null; }
+  }
+
+  function parsePantryText(text){
+    var items=[];
+    text.split(/\n/).forEach(function(line){
+      if(/^\s*my kitchen inventory/i.test(line)) return;
+      var after = line.indexOf(":")>=0 ? line.slice(line.indexOf(":")+1) : line; // drop "FRIDGE:" labels
+      after.split(",").forEach(function(part){ var v=part.trim(); if(v.length>1) items.push(v); });
+    });
+    return items;
+  }
+
+  var UNITS=["lb","lbs","pound","pounds","oz","ounce","ounces","tbsp","tablespoon","tablespoons","tsp","teaspoon","teaspoons","cup","cups","can","cans","clove","cloves","pinch","g","kg","ml","l","fl","fillet","fillets","slice","slices"];
+  var QUALIFIERS=["dried","fresh","ground","leaves","leaf","whole","powder","seeds","seed","minced","chopped","sliced","diced","crushed","flakes","light","dark","boneless","skinless","large","medium","small","extra","virgin","cold","pressed","roasted","granulated","raw","ripe","frozen","canned"];
+
+  function normalize(s){
+    s=String(s).toLowerCase();
+    s=s.replace(/['’]/g,"");           // franks -> matches Frank's
+    s=s.replace(/&/g," and ");
+    s=s.replace(/\([^)]*\)/g," ");      // strip "(can)", "(allspice)" etc.
+    s=s.replace(/[^a-z\s]/g," ");        // drop digits & punctuation
+    return s.replace(/\s+/g," ").trim();
+  }
+  function reduce(core){
+    return core.split(" ").filter(function(w){ return w && QUALIFIERS.indexOf(w)<0; }).join(" ");
+  }
+  function ingredientCore(line){
+    var raw=String(line).trim();
+    if(/^—/.test(raw)) return {header:true};
+    var lower=raw.toLowerCase();
+    var unit = /\btsp\b|teaspoon/.test(lower) ? "tsp" : (/\btbsp\b|tablespoon/.test(lower) ? "tbsp" : (/\bpinch\b/.test(lower) ? "pinch" : ""));
+    var head=raw.split(",")[0];                 // drop prep after comma
+    var words=normalize(head).split(" ").filter(function(w){return w.length>0;});
+    while(words.length && UNITS.indexOf(words[0])>=0) words.shift();   // strip leading unit
+    words=words.filter(function(w){ return ["of","to","taste","a","the"].indexOf(w)<0; });
+    return {header:false, core:words.join(" "), unit:unit};
+  }
+  function isAlwaysHave(core){
+    return ["water","salt","salt and pepper","salt to taste","pepper","black pepper","ground black pepper","ground white pepper","white pepper"].indexOf(core)>=0;
+  }
+  function pantryHas(core){
+    if(!core) return true;
+    if(isAlwaysHave(core)) return true;
+    var rc=reduce(core), rcw=rc?rc.split(" ").length:0;
+    for(var i=0;i<pantryItems.length;i++){
+      var p=normalize(pantryItems[i]); if(!p) continue;
+      if(p===core || (p.indexOf(core)>=0 && core.length>=3) || (core.indexOf(p)>=0 && p.length>=3)) return true;
+      var rp=reduce(p), rpw=rp?rp.split(" ").length:0;
+      if(rp && rc){
+        if(rp===rc) return true;
+        if(rp.indexOf(rc)>=0 && rcw>=2) return true;   // a contained phrase must be multi-word...
+        if(rc.indexOf(rp)>=0 && rpw>=2) return true;   // ...so "bay" can't satisfy "old bay seasoning"
+      }
+    }
+    return false;
+  }
+  var SMALL_WORDS=["pepper","salt","cumin","paprika","oregano","basil","thyme","rosemary","parsley","cilantro","mint","bay","cayenne","chili","chilli","cinnamon","turmeric","coriander","cardamom","allspice","pimento","nutmeg","clove","cloves","seasoning","seasoned","cajun","adobo","tajin","bouillon","chives","anise","sesame seeds","flakes","powder","ginger","garlic","shallot","shallots","green onion","dill","sage"];
+  var CONDIMENT_WORDS=["sauce","vinegar","syrup","ketchup","mustard","mayonnaise","relish","honey","worcestershire","soy","maple"];
+  function classify(core, unit){
+    if(unit==="tsp"||unit==="tbsp"||unit==="pinch") return "minor";
+    var i;
+    for(i=0;i<SMALL_WORDS.length;i++){ if(core.indexOf(SMALL_WORDS[i])>=0) return "minor"; }
+    for(i=0;i<CONDIMENT_WORDS.length;i++){ if(core.indexOf(CONDIMENT_WORDS[i])>=0) return "minor"; }
+    return "main";
+  }
+  function analyze(r){
+    var missing=[], mMain=0, mMinor=0;
+    r.ingredients.forEach(function(line){
+      var c=ingredientCore(line);
+      if(c.header || pantryHas(c.core)) return;
+      var type=classify(c.core, c.unit);
+      if(type==="main") mMain++; else mMinor++;
+      missing.push({label:String(line).split(",")[0].trim(), type:type});
+    });
+    return {missing:missing, mMain:mMain, mMinor:mMinor, total:missing.length};
+  }
+
+  function doSync(){
+    var items=syncFromInventory();
+    if(items && items.length){ pantryItems=items; persistPantry(); toast("Synced "+items.length+" ingredients"); render(); }
+    else { toast("No inventory found — paste it instead"); openPantry(); }
+  }
+  function openPantry(){ pantryText=pantryItems.join("\n"); view="pantry"; render(); }
+
+  function renderPantry(){
+    var app=document.getElementById("app");
+    app.innerHTML='<div style="font-size:13px;color:var(--muted2);line-height:1.5;margin-bottom:12px;">List what you have, one per line (or comma-separated). You can paste the “Copy for Claude” text from your Inventory app, or pull it in directly.</div>'+
+      '<button class="card-btn add" id="pullBtn" style="margin-bottom:12px;">⟲ Pull from my Inventory app</button>'+
+      '<div class="field"><textarea id="pantryArea" rows="12" placeholder="eggs&#10;jasmine rice&#10;chicken thighs&#10;cumin, paprika, garlic powder">'+esc(pantryText)+'</textarea></div>'+
+      '<button class="save-btn" id="savePantry">Save ingredients</button>'+
+      '<button class="cancel-link" id="cancelPantry">Cancel</button>';
+    document.getElementById("pullBtn").addEventListener("click",function(){
+      var items=syncFromInventory();
+      if(items && items.length){ document.getElementById("pantryArea").value=items.join("\n"); toast("Pulled "+items.length+" items"); }
+      else { toast("No Inventory app data found on this device"); }
+    });
+    document.getElementById("savePantry").addEventListener("click",function(){
+      pantryItems=parsePantryText(document.getElementById("pantryArea").value);
+      persistPantry(); toast("Saved "+pantryItems.length+" ingredients");
+      homeTab="cooknow"; view="home"; render();
+    });
+    document.getElementById("cancelPantry").addEventListener("click",function(){ homeTab="cooknow"; view="home"; render(); });
+  }
+
+  function renderCookNow(app){
+    if(!pantryItems.length){
+      app.innerHTML='<div class="card"><div class="card-name">What can I make right now?</div>'+
+        '<div class="card-desc">Load the ingredients you have and I\'ll show what you can cook tonight — plus recipes you\'re only a couple items short on.</div>'+
+        '<button class="card-btn add" id="syncBtn">⟲ Sync from my Inventory app</button>'+
+        '<div class="row-mini"><button class="mini" id="pasteBtn">Paste / type my list</button></div></div>';
+      document.getElementById("syncBtn").addEventListener("click",doSync);
+      document.getElementById("pasteBtn").addEventListener("click",openPantry);
+      return;
+    }
+    var ready=[], almost=[], far=0;
+    allRecipes().forEach(function(r){
+      var a=analyze(r);
+      if(a.total===0) ready.push(r);
+      else if(a.mMain<=1 && a.mMinor<=2) almost.push({r:r,a:a});
+      else far++;
+    });
+    almost.sort(function(x,y){ return (x.a.total-y.a.total) || (x.a.mMain-y.a.mMain); });
+
+    var html='<div style="display:flex;justify-content:space-between;align-items:center;margin:2px 0 16px;gap:10px;">'+
+      '<span style="font-size:12px;color:var(--muted2);">Using <b>'+pantryItems.length+'</b> ingredients</span>'+
+      '<div style="display:flex;gap:8px;flex:0 0 auto;">'+
+        '<button class="mini" style="flex:0 0 auto;padding:7px 12px;" id="openShop">🛒 List'+(shoppingList.length?" ("+shoppingList.length+")":"")+'</button>'+
+        '<button class="mini" style="flex:0 0 auto;padding:7px 12px;" id="updatePantry">Update</button>'+
+      '</div></div>';
+
+    html+='<div class="section-label">Almost there — just grab a few things</div>';
+    if(!almost.length){ html+='<div style="font-size:13px;color:var(--muted);font-style:italic;margin-bottom:18px;">Nothing here right now — you\'re either fully stocked or a recipe needs a bigger shop.</div>'; }
+    almost.forEach(function(o){
+      html+='<div class="card"><div class="card-name">'+esc(o.r.name)+'</div>'+
+        '<div class="card-meta"><span>'+esc(o.r.servings)+'</span><span>'+esc(o.r.time)+'</span></div>'+
+        '<div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;">You\'re missing:</div>'+
+        '<div style="margin-bottom:12px;">'+o.a.missing.map(function(m){
+          var col=(m.type==="main"?"#b5532f":"#8a6e1e");
+          return '<span class="tag" style="border-color:'+col+';color:'+col+';">'+esc(m.label)+' · '+(m.type==="main"?"main":"small")+'</span>';
+        }).join(" ")+'</div>'+
+        '<button class="card-btn" data-open="'+o.r.id+'">▶ Open recipe</button>'+
+        '<div class="row-mini"><button class="mini" data-addshop="'+o.r.id+'">🛒 Add missing to list</button></div></div>';
+    });
+
+    html+='<div class="section-label">Ready to make now ('+ready.length+')</div>';
+    if(!ready.length){ html+='<div style="font-size:13px;color:var(--muted);font-style:italic;">Add more ingredients to unlock recipes.</div>'; }
+    ready.forEach(function(r){
+      html+='<div class="card" style="padding:13px 16px;"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">'+
+        '<div style="min-width:0;"><div style="font-size:15px;font-weight:bold;line-height:1.2;">'+esc(r.name)+'</div>'+
+        '<div style="font-size:11px;color:var(--muted);margin-top:3px;">✓ You have everything · '+esc(r.time)+'</div></div>'+
+        '<button class="card-btn" style="width:auto;padding:10px 15px;flex:0 0 auto;" data-open="'+r.id+'">Start</button></div></div>';
+    });
+    if(far>0){ html+='<div style="font-size:12px;color:var(--muted);font-style:italic;margin-top:16px;">'+far+' more recipe'+(far!==1?'s':'')+' need a bigger shop.</div>'; }
+
+    app.innerHTML=html;
+    document.getElementById("updatePantry").addEventListener("click",openPantry);
+    document.getElementById("openShop").addEventListener("click",openShopping);
+    Array.prototype.forEach.call(app.querySelectorAll("[data-open]"),function(b){ b.addEventListener("click",function(){ view=b.getAttribute("data-open"); render(); }); });
+    Array.prototype.forEach.call(app.querySelectorAll("[data-addshop]"),function(b){ b.addEventListener("click",function(){ var r=recipeById(b.getAttribute("data-addshop")); var a=analyze(r); var n=addToShopping(a.missing.map(function(m){return m.label;})); toast(n?("Added "+n+" item"+(n!==1?"s":"")+" to list"):"Already on your list"); render(); }); });
+  }
+
+  // ---------- shopping list ----------
+  function persistShopping(){ try{ localStorage.setItem(SHOP_KEY, JSON.stringify(shoppingList)); }catch(e){} }
+  function cleanForShopping(s){
+    var t=String(s).trim();
+    t=t.replace(/^[\d\s\/.\-–]+/,"");                                  // strip leading quantity
+    t=t.replace(/^(tsp|tbsp|teaspoons?|tablespoons?|cups?|oz|ounces?|lbs?|pounds?|cans?|cloves?|pinch|g|kg|ml|l|fl|fillets?|slices?)\b\s*/i,""); // strip a unit word
+    t=t.trim();
+    if(t.length) t=t.charAt(0).toUpperCase()+t.slice(1);
+    return t;
+  }
+  function addToShopping(labels){
+    var added=0;
+    labels.forEach(function(l){
+      var name=cleanForShopping(l); if(!name) return;
+      var dup=shoppingList.some(function(x){ return x.name.toLowerCase()===name.toLowerCase(); });
+      if(!dup){ shoppingList.push({name:name, checked:false}); added++; }
+    });
+    persistShopping();
+    return added;
+  }
+  function buildShopText(){
+    var rem=shoppingList.filter(function(x){ return !x.checked; });
+    var src=rem.length?rem:shoppingList;
+    return src.map(function(x){ return x.name; }).join("\n");
+  }
+  function copyShop(){
+    var text=buildShopText(); if(!text){ toast("List is empty"); return; }
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(function(){ toast("Copied"); }).catch(function(){ fallbackCopy(text); }); }
+    else fallbackCopy(text);
+  }
+  function fallbackCopy(text){
+    var ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try{ document.execCommand("copy"); toast("Copied"); }catch(e){ toast("Copy failed"); }
+    document.body.removeChild(ta);
+  }
+  function shareShop(){
+    var text=buildShopText(); if(!text){ toast("List is empty"); return; }
+    if(navigator.share){ navigator.share({title:"Shopping list", text:text}).catch(function(){}); }
+    else copyShop();
+  }
+  function openShopping(){ view="shopping"; render(); }
+
+  function renderShopping(){
+    var app=document.getElementById("app");
+    var html='<div style="display:flex;gap:8px;margin-bottom:14px;">'+
+      '<input id="shopAdd" placeholder="Add an item…" style="flex:1;padding:11px 12px;border:1.5px solid #d0c8b0;border-radius:7px;font-size:15px;background:var(--paper);outline:none;color:var(--espresso);">'+
+      '<button class="card-btn" style="width:auto;padding:0 16px;flex:0 0 auto;" id="shopAddBtn">Add</button></div>';
+    if(!shoppingList.length){
+      html+='<div class="empty">Your shopping list is empty.<br><small>Add items above, or tap “🛒 Add missing” on an Almost-there recipe in Cook Now.</small></div>';
+    } else {
+      var remaining=shoppingList.filter(function(x){ return !x.checked; }).length;
+      html+='<div class="section-label">'+shoppingList.length+' item'+(shoppingList.length!==1?'s':'')+' · '+remaining+' to buy</div>';
+      shoppingList.forEach(function(it,i){
+        html+='<div class="step'+(it.checked?" checked":"")+'" style="padding:11px 14px;">'+
+          '<button class="check" data-shopck="'+i+'">'+(it.checked?"✓":"")+'</button>'+
+          '<div class="step-body" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">'+
+            '<span style="font-size:15px;'+(it.checked?"text-decoration:line-through;color:var(--muted);":"")+'">'+esc(it.name)+'</span>'+
+            '<button class="icon-btn del" data-shopdel="'+i+'">🗑️</button></div></div>';
+      });
+      html+='<div class="row-mini" style="margin-top:14px;"><button class="mini" id="copyShop">📋 Copy list</button>'+
+        (navigator.share?'<button class="mini" id="shareShop">↗ Share</button>':'')+'</div>'+
+        '<div class="row-mini"><button class="mini" id="clearChecked">Clear ticked</button><button class="mini danger" id="clearAll">Clear all</button></div>'+
+        '<div style="font-size:11px;color:var(--muted);line-height:1.5;margin-top:14px;">Tip: <b>Copy</b> or <b>Share</b> drops the list into Notes, Reminders, or your messages. (Alexa lists can\'t sync — Amazon closed that API in 2024.)</div>';
+    }
+    app.innerHTML=html;
+
+    function addItem(){ var v=document.getElementById("shopAdd").value.trim(); if(!v) return; addToShopping([v]); render(); var f=document.getElementById("shopAdd"); if(f) f.focus(); }
+    document.getElementById("shopAddBtn").addEventListener("click",addItem);
+    document.getElementById("shopAdd").addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); addItem(); } });
+    Array.prototype.forEach.call(app.querySelectorAll("[data-shopck]"),function(b){ b.addEventListener("click",function(){ var i=parseInt(b.getAttribute("data-shopck")); shoppingList[i].checked=!shoppingList[i].checked; persistShopping(); render(); }); });
+    Array.prototype.forEach.call(app.querySelectorAll("[data-shopdel]"),function(b){ b.addEventListener("click",function(){ shoppingList.splice(parseInt(b.getAttribute("data-shopdel")),1); persistShopping(); render(); }); });
+    var cs=document.getElementById("copyShop"); if(cs) cs.addEventListener("click",copyShop);
+    var ss=document.getElementById("shareShop"); if(ss) ss.addEventListener("click",shareShop);
+    var cc=document.getElementById("clearChecked"); if(cc) cc.addEventListener("click",function(){ shoppingList=shoppingList.filter(function(x){return !x.checked;}); persistShopping(); render(); });
+    var ca=document.getElementById("clearAll"); if(ca) ca.addEventListener("click",function(){ if(confirm("Clear the whole shopping list?")){ shoppingList=[]; persistShopping(); render(); } });
+  }
+
+  // ---------- header + tabs ----------
+  function renderHeader(){
+    var h=document.getElementById("header");
+    if(view==="home"){
+      h.innerHTML='<div><div class="kicker">My Kitchen</div><div class="title">Recipes</div></div>'+
+        '<div class="spacer"></div>'+
+        '<button class="new-btn" id="newBtn">+ New</button>';
+      document.getElementById("newBtn").addEventListener("click",function(){ openNewRecipe(null); });
+    } else if(view==="new"){
+      h.innerHTML='<button class="back-btn" id="backBtn">←</button><div><div class="kicker">Create</div><div class="title">New Recipe</div></div>';
+      document.getElementById("backBtn").addEventListener("click",function(){ view="home"; render(); });
+    } else if(view==="pantry"){
+      h.innerHTML='<button class="back-btn" id="backBtn">←</button><div><div class="kicker">On Hand</div><div class="title">My Ingredients</div></div>';
+      document.getElementById("backBtn").addEventListener("click",function(){ homeTab="cooknow"; view="home"; render(); });
+    } else if(view==="shopping"){
+      h.innerHTML='<button class="back-btn" id="backBtn">←</button><div><div class="kicker">To Buy</div><div class="title">Shopping List</div></div>';
+      document.getElementById("backBtn").addEventListener("click",function(){ homeTab="cooknow"; view="home"; render(); });
+    } else {
+      h.innerHTML='<button class="back-btn" id="backBtn">←</button><div><div class="kicker">Recipe</div><div class="title">Cooking</div></div>';
+      document.getElementById("backBtn").addEventListener("click",function(){ stopTimerSilent(); view="home"; render(); });
+    }
+  }
+  function renderTabs(){
+    var host=document.getElementById("tabsHost");
+    if(view!=="home"){ host.innerHTML=""; return; }
+    host.innerHTML='<div class="tabs">'+
+      '<button class="tab'+(homeTab==="cookbook"?" active":"")+'" data-tab="cookbook">Cookbook</button>'+
+      '<button class="tab'+(homeTab==="library"?" active":"")+'" data-tab="library">Library</button>'+
+      '<button class="tab'+(homeTab==="cooknow"?" active":"")+'" data-tab="cooknow">Cook Now</button>'+
+      '</div>';
+    Array.prototype.forEach.call(host.querySelectorAll("[data-tab]"),function(b){
+      b.addEventListener("click",function(){ homeTab=b.getAttribute("data-tab"); render(); });
+    });
+  }
+
+  // ---------- home ----------
+  function renderHome(){
+    var app=document.getElementById("app");
+    if(homeTab==="cookbook"){ renderCookbook(app); }
+    else if(homeTab==="library"){ renderLibrary(app); }
+    else { renderCookNow(app); }
+  }
+  function renderCookbook(app){
+    var list=activeRecipes();
+    if(!list.length){ app.innerHTML='<div class="empty">No recipes in your cookbook.<br><small>Add some from the Library, or tap + New.</small></div>'; return; }
+    var html="";
+    list.forEach(function(r){
+      var done=checkedCount(r.id), total=r.steps.length, started=getProg(r.id).started;
+      var btnClass="card-btn", btnText="▶ Start Cooking";
+      if(isComplete(r.id)){ btnClass="card-btn done"; btnText="✓ Cooked — open again"; }
+      else if(started && done>0){ btnClass="card-btn resume"; btnText="↻ Resume ("+done+"/"+total+")"; }
+      html+='<div class="card"><div class="card-name">'+esc(r.name)+'</div>'+
+        '<div class="tagrow">'+(isCustom(r)?'<span class="tag custom">Yours</span>':"")+ (r.tools||[]).map(function(t){return '<span class="tag">'+esc(t)+'</span>';}).join("")+'</div>'+
+        '<div class="card-meta"><span>'+esc(r.servings)+'</span><span>'+esc(r.time)+'</span></div>'+
+        '<div class="card-desc">'+esc(r.desc)+'</div>'+
+        '<button class="'+btnClass+'" data-open="'+r.id+'">'+btnText+'</button>';
+      if(isCustom(r)){
+        html+='<div class="row-mini"><button class="mini" data-edit="'+r.id+'">Edit</button><button class="mini danger" data-del="'+r.id+'">Delete</button></div>';
+      } else {
+        html+='<div class="row-mini"><button class="mini" data-remove="'+r.id+'">Remove from cookbook</button></div>';
+      }
+      html+='</div>';
+    });
+    app.innerHTML=html;
+    wireCards(app);
+  }
+  function renderLibrary(app){
+    var list=libraryRecipes();
+    if(!list.length){ app.innerHTML='<div class="empty">You\'ve added every recipe in the Library!<br><small>Tap + New to create your own.</small></div>'; return; }
+    var html='<div style="font-size:13px;color:var(--muted2);margin:4px 0 14px;line-height:1.5;">Tap <b>+ Add</b> to drop any of these into your cookbook. Nothing to re-install — it just appears.</div>';
+    list.forEach(function(r){
+      html+='<div class="card"><div class="card-name">'+esc(r.name)+'</div>'+
+        '<div class="tagrow">'+(r.tools||[]).map(function(t){return '<span class="tag">'+esc(t)+'</span>';}).join("")+'</div>'+
+        '<div class="card-meta"><span>'+esc(r.servings)+'</span><span>'+esc(r.time)+'</span></div>'+
+        '<div class="card-desc">'+esc(r.desc)+'</div>'+
+        '<button class="card-btn add" data-add="'+r.id+'">+ Add to cookbook</button></div>';
+    });
+    app.innerHTML=html;
+    Array.prototype.forEach.call(app.querySelectorAll("[data-add]"),function(b){
+      b.addEventListener("click",function(){ var id=b.getAttribute("data-add"); book.overrides[id]=true; persistBook(); toast("Added to your cookbook"); render(); });
+    });
+  }
+  function wireCards(app){
+    Array.prototype.forEach.call(app.querySelectorAll("[data-open]"),function(b){ b.addEventListener("click",function(){ view=b.getAttribute("data-open"); render(); }); });
+    Array.prototype.forEach.call(app.querySelectorAll("[data-remove]"),function(b){ b.addEventListener("click",function(){ var id=b.getAttribute("data-remove"); book.overrides[id]=false; persistBook(); toast("Moved to Library"); render(); }); });
+    Array.prototype.forEach.call(app.querySelectorAll("[data-edit]"),function(b){ b.addEventListener("click",function(){ openNewRecipe(b.getAttribute("data-edit")); }); });
+    Array.prototype.forEach.call(app.querySelectorAll("[data-del]"),function(b){ b.addEventListener("click",function(){ var id=b.getAttribute("data-del"); var r=recipeById(id); if(confirm("Delete \""+r.name+"\"? This can't be undone.")){ book.custom=book.custom.filter(function(x){return x.id!==id;}); delete progress[id]; persistBook(); persistProg(); toast("Recipe deleted"); render(); } }); });
+  }
+
+  // ---------- recipe detail ----------
+  function renderRecipe(){
+    var app=document.getElementById("app");
+    var r=recipeById(view);
+    if(!r){ view="home"; render(); return; }
+    var p=getProg(r.id), done=checkedCount(r.id), total=r.steps.length;
+    var html='<div style="font-size:21px;font-weight:bold;line-height:1.25;margin-bottom:8px;">'+esc(r.name)+'</div>'+
+      '<span class="tag">'+esc(r.servings)+'</span> <span class="tag">'+esc(r.time)+'</span>';
+    html+='<div class="section-label">Gather your ingredients</div><div class="ingredients">';
+    r.ingredients.forEach(function(ing){
+      if(ing.indexOf("—")===0 || /^—/.test(ing)){ html+='<div class="ing" style="color:var(--muted);font-style:italic;"><span>'+esc(ing.replace(/—/g,"").trim())+'</span></div>'; }
+      else { html+='<div class="ing"><span class="dot"></span><span>'+esc(ing)+'</span></div>'; }
+    });
+    html+='</div>';
+    if(!p.started){
+      html+='<button class="start-btn" id="startBtn">▶ Start Cooking</button>';
+    } else {
+      var pct=Math.round(done/total*100);
+      html+='<div class="progress-bar"><div class="progress-top"><span class="progress-count">Step '+Math.min(done+1,total)+' of '+total+'</span><span class="progress-pct">'+pct+'%</span></div><div class="track"><div class="fill" style="width:'+pct+'%"></div></div></div>';
+      html+='<div class="section-label">Steps</div>';
+      var firstUnchecked=p.checked.indexOf(false);
+      r.steps.forEach(function(st,i){
+        var ck=p.checked[i], active=(i===firstUnchecked);
+        html+='<div class="step'+(ck?" checked":"")+(active?" active":"")+'">'+
+          '<button class="check" data-check="'+i+'">'+(ck?"✓":"")+'</button>'+
+          '<div class="step-body"><div class="step-num">Step '+(i+1)+'</div>'+
+          (st.title?'<div class="step-title">'+esc(st.title)+'</div>':"")+
+          '<div class="step-text">'+esc(st.text)+'</div>';
+        if(st.timer>0){
+          var running=(activeTimer && activeTimer.stepIdx===i);
+          var cls,txt,disp;
+          if(running && activeTimer.done){ cls="timer-btn done"; txt="⏰ Time's up!"; disp=fmt(0); }
+          else if(running){ cls="timer-btn running"; txt="⏹ Stop"; disp=fmt(activeTimer.remaining); }
+          else { cls="timer-btn"; txt="⏱ Start "+fmt(st.timer)+" timer"; disp=""; }
+          html+='<div class="timer-row"><button class="'+cls+'" id="timer-btn-'+i+'" data-timer="'+i+'" data-sec="'+st.timer+'">'+txt+'</button><span class="timer-display" id="timer-disp-'+i+'">'+disp+'</span></div>';
+        }
+        html+='</div></div>';
+      });
+      html+='<button class="reset-btn" id="resetBtn">Reset this recipe</button>';
+    }
+    app.innerHTML=html;
+    var sb=document.getElementById("startBtn");
+    if(sb) sb.addEventListener("click",function(){ initAudio(); p.started=true; persistProg(); render(); window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"}); });
+    Array.prototype.forEach.call(app.querySelectorAll("[data-check]"),function(b){ b.addEventListener("click",function(){ toggleStep(r.id,parseInt(b.getAttribute("data-check"))); }); });
+    Array.prototype.forEach.call(app.querySelectorAll("[data-timer]"),function(b){ b.addEventListener("click",function(){ var idx=parseInt(b.getAttribute("data-timer")), sec=parseInt(b.getAttribute("data-sec")); if(activeTimer && activeTimer.stepIdx===idx) stopTimer(); else startTimer(idx,sec); }); });
+    var rb=document.getElementById("resetBtn");
+    if(rb) rb.addEventListener("click",function(){ if(confirm("Reset progress for "+r.name+"?")){ stopTimerSilent(); p.started=false; p.checked=new Array(r.steps.length).fill(false); persistProg(); render(); } });
+  }
+
+  function toggleStep(id,idx){
+    var p=getProg(id);
+    p.checked[idx]=!p.checked[idx];
+    if(p.checked[idx]){ initAudio(); beep(660,0.08,0); vibrate(30); }
+    persistProg();
+    var nowComplete=isComplete(id);
+    render();
+    if(nowComplete) celebrate(id);
+  }
+
+  // ---------- completion ----------
+  function celebrate(id){
+    var r=recipeById(id);
+    document.getElementById("overlayTitle").textContent=r.name.replace(/^InstaPot |^Smoked |^Grilled /,"")+" — done!";
+    document.getElementById("overlayMsg").textContent="All steps complete. Cool it, portion it, and you're set. Nice work. 💪";
+    document.getElementById("overlay").classList.add("show");
+    fanfare(); vibrate([100,50,100,50,200]); confetti();
+  }
+  document.getElementById("overlayBtn").addEventListener("click",function(){ document.getElementById("overlay").classList.remove("show"); stopTimerSilent(); view="home"; render(); });
+
+  // ---------- confetti ----------
+  function confetti(){
+    var c=document.getElementById("confetti"), ctx=c.getContext("2d");
+    c.width=window.innerWidth; c.height=window.innerHeight;
+    var colors=["#c8a84b","#3a6e4a","#e85c3a","#faf7f2","#e0c060"], bits=[];
+    for(var i=0;i<120;i++){ bits.push({x:Math.random()*c.width,y:-20-Math.random()*c.height*0.3,r:4+Math.random()*5,c:colors[i%colors.length],vy:2+Math.random()*4,vx:-2+Math.random()*4,rot:Math.random()*6,vr:-0.2+Math.random()*0.4}); }
+    var frames=0;
+    (function tick(){ ctx.clearRect(0,0,c.width,c.height); bits.forEach(function(b){ b.x+=b.vx;b.y+=b.vy;b.rot+=b.vr; ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(b.rot); ctx.fillStyle=b.c; ctx.fillRect(-b.r/2,-b.r/2,b.r,b.r*1.6); ctx.restore(); }); frames++; if(frames<160) requestAnimationFrame(tick); else ctx.clearRect(0,0,c.width,c.height); })();
+  }
+
+  // ---------- new / edit recipe ----------
+  function openNewRecipe(editId){
+    if(editId){
+      var r=recipeById(editId);
+      draft={ editingId:editId, name:r.name, servings:r.servings, time:r.time,
+        ingredients:r.ingredients.join("\n"),
+        steps:r.steps.map(function(s){ return {text:s.text, min:(s.timer?Math.round(s.timer/60):""), title:s.title||""}; }) };
+    } else {
+      draft={ editingId:null, name:"", servings:"Serves 4", time:"", ingredients:"", steps:[{text:"",min:"",title:""},{text:"",min:"",title:""},{text:"",min:"",title:""}] };
+    }
+    view="new"; render();
+  }
+  function syncDraft(){
+    if(!draft) return;
+    var n=document.getElementById("f-name"); if(n) draft.name=n.value;
+    var sv=document.getElementById("f-servings"); if(sv) draft.servings=sv.value;
+    var tm=document.getElementById("f-time"); if(tm) draft.time=tm.value;
+    var ing=document.getElementById("f-ing"); if(ing) draft.ingredients=ing.value;
+    draft.steps.forEach(function(st,i){
+      var t=document.getElementById("f-step-"+i); if(t) st.text=t.value;
+      var m=document.getElementById("f-min-"+i); if(m) st.min=m.value;
+    });
+  }
+  function renderNew(){
+    var app=document.getElementById("app");
+    var html='<div class="field"><label>Recipe name</label><input id="f-name" value="'+escAttr(draft.name)+'" placeholder="e.g. Mom\'s Chili"></div>'+
+      '<div class="two"><div class="field"><label>Servings</label><input id="f-servings" value="'+escAttr(draft.servings)+'" placeholder="Serves 4"></div>'+
+      '<div class="field"><label>Time</label><input id="f-time" value="'+escAttr(draft.time)+'" placeholder="~30 min"></div></div>'+
+      '<div class="field"><label>Ingredients (one per line)</label><textarea id="f-ing" rows="6" placeholder="1 lb ground beef&#10;1 onion, diced&#10;2 cans kidney beans">'+esc(draft.ingredients)+'</textarea></div>'+
+      '<div class="section-label">Steps</div>';
+    draft.steps.forEach(function(st,i){
+      html+='<div class="step-edit"><div class="step-edit-head"><span>Step '+(i+1)+'</span>'+(draft.steps.length>1?'<button data-rmstep="'+i+'">✕</button>':"")+'</div>'+
+        '<textarea id="f-step-'+i+'" rows="2" placeholder="What to do in this step">'+esc(st.text)+'</textarea>'+
+        '<div class="min-row">⏱ Timer: <input id="f-min-'+i+'" type="number" min="0" value="'+escAttr(st.min===0?"0":(st.min||""))+'" placeholder="0"> min <span style="opacity:.7;">(leave blank for none)</span></div></div>';
+    });
+    html+='<button class="add-step" id="addStep">+ Add step</button>'+
+      '<button class="save-btn" id="saveRecipe">'+(draft.editingId?"Save changes":"Save recipe")+'</button>'+
+      '<button class="cancel-link" id="cancelNew">Cancel</button>';
+    app.innerHTML=html;
+
+    document.getElementById("addStep").addEventListener("click",function(){ syncDraft(); draft.steps.push({text:"",min:"",title:""}); render(); });
+    Array.prototype.forEach.call(app.querySelectorAll("[data-rmstep]"),function(b){ b.addEventListener("click",function(){ syncDraft(); draft.steps.splice(parseInt(b.getAttribute("data-rmstep")),1); render(); }); });
+    document.getElementById("cancelNew").addEventListener("click",function(){ draft=null; view="home"; render(); });
+    document.getElementById("saveRecipe").addEventListener("click",saveRecipe);
+  }
+  function saveRecipe(){
+    syncDraft();
+    if(!draft.name.trim()){ toast("Give it a name first"); return; }
+    var steps=draft.steps.map(function(st){ return {title:st.title||"", text:st.text.trim(), timer:(st.min!==""&&!isNaN(parseInt(st.min)))?parseInt(st.min)*60:0}; }).filter(function(s){ return s.text.length>0; });
+    if(!steps.length){ toast("Add at least one step"); return; }
+    var ingredients=draft.ingredients.split("\n").map(function(s){return s.trim();}).filter(function(s){return s.length>0;});
+    if(draft.editingId){
+      var idx=-1; for(var i=0;i<book.custom.length;i++){ if(book.custom[i].id===draft.editingId) idx=i; }
+      var existing=recipeById(draft.editingId);
+      var updated={ id:draft.editingId, name:draft.name.trim(), desc:(existing&&existing.desc)||"Your recipe.", servings:draft.servings.trim()||"Serves 4", time:draft.time.trim()||"", tools:["Yours"], ingredients:ingredients, steps:steps, defaultActive:true };
+      if(idx>=0){ book.custom[idx]=updated; }
+      // reset progress to match new step count
+      progress[draft.editingId]={started:false,checked:new Array(steps.length).fill(false)};
+      persistBook(); persistProg(); toast("Changes saved");
+    } else {
+      var id="custom-"+Date.now();
+      book.custom.push({ id:id, name:draft.name.trim(), desc:"Your recipe.", servings:draft.servings.trim()||"Serves 4", time:draft.time.trim()||"", tools:["Yours"], ingredients:ingredients, steps:steps, defaultActive:true });
+      persistBook(); toast("Recipe added to your cookbook");
+    }
+    draft=null; homeTab="cookbook"; view="home"; render();
+  }
+
+  // ---------- escaping ----------
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function escAttr(s){ return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;"); }
+
+  // ---------- main render ----------
+  function render(){
+    renderHeader(); renderTabs();
+    if(view==="home") renderHome();
+    else if(view==="new") renderNew();
+    else if(view==="pantry") renderPantry();
+    else if(view==="shopping") renderShopping();
+    else renderRecipe();
+  }
+
+  // ---------- init ----------
+  load();
+  render();
+  if("serviceWorker" in navigator){ window.addEventListener("load",function(){ navigator.serviceWorker.register("./sw.js").catch(function(){}); }); }
+})();
+</script>
+</body>
+</html>
